@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#639922">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NutriAI">
+<title>NutriAI 🥗</title>
+
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --green:#4a8f10;--green2:#639922;--greenl:#eaf3de;--greend:#2d6008;
+  --amber:#c07a10;--amberl:#fef3dc;
+  --blue:#2979c8;--bluel:#e8f2fd;
+  --coral:#c94e22;--corall:#fdeee8;
+  --bg:#f5f4f0;--card:#ffffff;--border:#e5e2d8;
+  --text:#18180f;--sub:#5a5850;--muted:#9a9890;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:'Sora',sans-serif;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative}
+
+/* ── Status bar ── */
+.statusbar{
+  height:calc(44px + var(--safe-top));
+  padding-top:var(--safe-top);
+  background:var(--card);
+  display:flex;align-items:center;justify-content:space-between;
+  padding-left:20px;padding-right:20px;
+  font-size:12px;font-weight:700;color:var(--text);
+  flex-shrink:0;
+  border-bottom:0.5px solid var(--border);
+}
+
+/* ── Screens ── */
+#app{flex:1;overflow:hidden;position:relative}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .2s}
+.screen.active{opacity:1;pointer-events:all}
+
+.appbar{background:var(--card);padding:14px 18px 12px;border-bottom:0.5px solid var(--border);flex-shrink:0}
+.appbar h1{font-size:19px;font-weight:700;color:var(--text)}
+.appbar p{font-size:12px;color:var(--muted);margin-top:2px}
+
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 90px}
+
+/* ── Cards ── */
+.card{background:var(--card);border-radius:16px;border:0.5px solid var(--border);padding:16px;margin-bottom:12px}
+
+/* ── Calorie Ring ── */
+.ring-card{display:flex;align-items:center;gap:16px}
+.ring-svg-wrap{position:relative;width:110px;height:110px;flex-shrink:0}
+.ring-svg-wrap svg{transform:rotate(-90deg)}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-center .rc-num{font-size:22px;font-weight:700;color:var(--text);line-height:1}
+.ring-center .rc-lbl{font-size:10px;color:var(--muted);letter-spacing:.5px;margin-top:2px}
+.goal-lbl{font-size:11px;color:var(--muted)}
+.goal-num{font-size:19px;font-weight:700;color:var(--text);margin:3px 0 11px}
+.macros{display:flex;gap:6px}
+.mac{flex:1;border-radius:10px;padding:8px 4px;text-align:center}
+.mac .mv{font-size:14px;font-weight:700}
+.mac .ml{font-size:10px;margin-top:2px}
+.mac.ca{background:var(--amberl);color:var(--amber)}
+.mac.pr{background:var(--bluel);color:var(--blue)}
+.mac.ft{background:var(--corall);color:var(--coral)}
+
+/* ── Section label ── */
+.sec{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.9px;text-transform:uppercase;margin-bottom:8px}
+
+/* ── Meal card ── */
+.meal-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:.5px solid var(--border);margin-bottom:8px}
+.meal-head .mn{font-size:14px;font-weight:700;color:var(--text)}
+.meal-head .mk{font-size:13px;font-weight:700;color:var(--green2)}
+.food-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:.5px solid var(--border)}
+.food-row:last-child{border-bottom:none;padding-bottom:0}
+.fn{font-size:13px;font-weight:600;color:var(--text)}
+.fd{font-size:11px;color:var(--muted);margin-top:2px}
+.fk{font-size:13px;font-weight:700;color:var(--sub)}
+.lk{font-size:9px;background:#fff3e0;color:#c07a10;border:.5px solid #f5c060;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700;vertical-align:middle}
+
+/* ── Water ── */
+.wh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.wt{font-size:14px;font-weight:700;color:var(--text)}
+.wa{font-size:16px;font-weight:700;color:var(--blue)}
+.cups{display:flex;gap:6px;flex-wrap:wrap}
+.cup{width:34px;height:42px;border-radius:7px;border:1.5px solid #b8d4f2;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;user-select:none}
+.cup.full{background:#c8dff7;border-color:var(--blue)}
+.wsub{font-size:11px;color:var(--muted);margin-top:9px}
+
+/* ── Log Food ── */
+.ai-btn{background:var(--green2);border:none;border-radius:16px;padding:18px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;width:100%;margin-bottom:10px;transition:background .15s;text-align:left}
+.ai-btn:active{background:var(--greend)}
+.ai-icon{width:50px;height:50px;background:rgba(255,255,255,.2);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.ai-t1{font-size:15px;font-weight:700;color:#fff;font-family:'Sora',sans-serif}
+.ai-t2{font-size:11px;color:rgba(255,255,255,.75);margin-top:3px;font-family:'Sora',sans-serif}
+.opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.opt{background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:background .15s}
+.opt:active{background:var(--bg)}
+.opt .oi{font-size:24px}
+.opt .ot1{font-size:12px;font-weight:700;color:var(--text)}
+.opt .ot2{font-size:10px;color:var(--muted);text-align:center}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--card);border:.5px solid var(--border);border-radius:12px;padding:11px 14px;margin-bottom:10px}
+.search-box input{flex:1;border:none;outline:none;font-family:'Sora',sans-serif;font-size:13px;color:var(--text);background:transparent}
+.search-box input::placeholder{color:var(--muted)}
+.fi{background:var(--card);border:.5px solid var(--border);border-radius:12px;padding:11px 12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;cursor:pointer;transition:background .15s}
+.fi:active{background:var(--greenl)}
+.fi-info .fin{font-size:13px;font-weight:600;color:var(--text)}
+.fi-info .fisi{font-size:11px;color:var(--muted)}
+.fi-info .fid{font-size:10px;color:var(--muted);margin-top:2px}
+.fi-right{display:flex;align-items:center;gap:8px}
+.fi-cal .cv{font-size:15px;font-weight:700;color:var(--green2)}
+.fi-cal .cl{font-size:9px;color:var(--muted)}
+.add-c{width:28px;height:28px;background:var(--greenl);border:.5px solid rgba(99,153,34,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--green2);font-weight:300}
+
+/* ── Planner / AI Chat ── */
+.chat-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.chat-msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;padding:11px 14px;font-size:13px;line-height:1.55}
+.msg.ai{background:var(--card);border:.5px solid var(--border);color:var(--text);align-self:flex-start;border-radius:6px 16px 16px 16px}
+.msg.user{background:var(--green2);color:#fff;align-self:flex-end;border-radius:16px 16px 6px 16px}
+.msg.loading{color:var(--muted)}
+.chips-row{display:flex;gap:6px;overflow-x:auto;padding:0 14px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.chips-row::-webkit-scrollbar{display:none}
+.chip{background:var(--card);border:.5px solid var(--border);border-radius:20px;padding:7px 13px;font-size:11px;font-weight:600;color:var(--sub);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s}
+.chip:active{background:var(--greenl);border-color:var(--green2);color:var(--greend)}
+.chat-bar{background:var(--card);border-top:.5px solid var(--border);padding:8px 12px calc(8px + var(--safe-bot));display:flex;gap:8px;align-items:flex-end}
+.chat-input{flex:1;background:var(--bg);border:.5px solid var(--border);border-radius:12px;padding:10px 12px;font-family:'Sora',sans-serif;font-size:13px;color:var(--text);outline:none;resize:none;max-height:90px;line-height:1.4}
+.send-btn{width:38px;height:38px;background:var(--green2);border:none;border-radius:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s}
+.send-btn:active{background:var(--greend)}
+.send-btn:disabled{background:var(--border)}
+.send-icon{width:16px;height:16px;fill:#fff}
+
+/* ── Profile ── */
+.profile-hero{display:flex;align-items:center;gap:14px}
+.avatar{width:58px;height:58px;border-radius:50%;background:var(--greenl);border:2px solid rgba(74,143,16,.25);display:flex;align-items:center;justify-content:center;font-size:24px}
+.uname{font-size:17px;font-weight:700;color:var(--text)}
+.ugoal{font-size:12px;color:var(--sub);margin-top:3px}
+.streak-b{background:var(--amberl);border:.5px solid #f0c060;border-radius:10px;padding:8px 12px;text-align:center;margin-left:auto}
+.sn{font-size:17px;font-weight:700;color:var(--amber)}
+.sl{font-size:10px;color:var(--amber)}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);border:.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px}
+.sc{padding:14px;text-align:center}
+.sc+.sc{border-left:.5px solid var(--border)}
+.sv{font-size:17px;font-weight:700;color:var(--text)}
+.sk{font-size:10px;color:var(--muted);margin-top:2px}
+.srow{background:var(--card);border:.5px solid var(--border);border-radius:12px;padding:13px 14px;display:flex;align-items:center;gap:11px;margin-bottom:7px;cursor:pointer;transition:background .15s}
+.srow:active{background:var(--bg)}
+.si2{font-size:17px}
+.st2{flex:1;font-size:13px;color:var(--text)}
+.sa2{font-size:11px;color:var(--muted)}
+
+/* ── Bottom Nav ── */
+.bottom-nav{
+  background:var(--card);
+  border-top:.5px solid var(--border);
+  display:flex;
+  padding-bottom:var(--safe-bot);
+  flex-shrink:0;
+  z-index:50;
+}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:10px 0 8px;transition:opacity .15s}
+.ni:active{opacity:.7}
+.ni .icon{font-size:22px}
+.ni .lbl{font-size:9px;font-weight:600;color:var(--muted)}
+.ni.on .lbl{color:var(--green2);font-weight:700}
+.ni .dot{width:4px;height:4px;border-radius:50%;background:var(--green2);display:none;margin:1px auto 0}
+.ni.on .dot{display:block}
+
+/* ── Sheet overlay ── */
+.overlay{position:absolute;inset:0;background:rgba(10,12,8,.78);display:none;flex-direction:column;justify-content:flex-end;z-index:60}
+.overlay.on{display:flex}
+.sheet{background:var(--card);border-radius:22px 22px 0 0;padding:20px 20px calc(20px + var(--safe-bot));animation:sup .25s cubic-bezier(.34,1.3,.64,1)}
+@keyframes sup{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.handle{width:38px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px}
+.sh-name{font-size:19px;font-weight:700;color:var(--text);margin-bottom:2px}
+.sh-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.nutr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:16px}
+.nb{background:var(--bg);border-radius:10px;padding:9px 4px;text-align:center}
+.nb .nv{font-size:15px;font-weight:700}
+.nb .nl{font-size:10px;color:var(--muted);margin-top:2px}
+.qty-row{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.qty-row label{font-size:12px;color:var(--sub);white-space:nowrap}
+.qty-row input[type=range]{flex:1;accent-color:var(--green2)}
+.qty-v{font-size:14px;font-weight:700;color:var(--green2);min-width:28px;text-align:right}
+.btn-row{display:flex;gap:8px}
+.bcn{flex:1;padding:13px;border:.5px solid var(--border);background:transparent;border-radius:12px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer}
+.badd{flex:2;padding:13px;background:var(--green2);border:none;border-radius:12px;font-family:'Sora',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;transition:background .15s}
+.badd:active{background:var(--greend)}
+
+/* ── Toast ── */
+.toast{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);background:#1a2e0a;color:#fff;font-size:13px;font-weight:600;padding:11px 22px;border-radius:22px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s;z-index:80}
+.toast.show{animation:toastpop 2s ease forwards}
+@keyframes toastpop{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0}}
+
+/* ── Meal tab selector ── */
+.meal-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.meal-tabs::-webkit-scrollbar{display:none}
+.mt{padding:6px 14px;border-radius:20px;border:.5px solid var(--border);background:transparent;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:var(--sub);cursor:pointer;white-space:nowrap;transition:all .15s}
+.mt.on{background:var(--green2);border-color:var(--green2);color:#fff}
+
+/* ── Install banner ── */
+.install-banner{background:var(--greend);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.install-banner p{flex:1;font-size:12px;color:#fff;line-height:1.4}
+.install-banner button{background:rgba(255,255,255,.2);border:.5px solid rgba(255,255,255,.4);border-radius:8px;color:#fff;font-family:'Sora',sans-serif;font-size:11px;font-weight:700;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.install-banner .dismiss{background:none;border:none;color:rgba(255,255,255,.6);font-size:18px;padding:0;cursor:pointer;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
+</style>
+</head>
+<body>
+
+<!-- Status bar -->
+<div class="statusbar">
+  <span id="clock">9:41</span>
+  <span>NutriAI 🥗</span>
+  <span>📶 🔋</span>
+</div>
+
+<!-- Install banner -->
+<div class="install-banner" id="install-banner" style="display:none">
+  <p>📲 Home Screen ට add කරන්න! App එකක් වගේ use කරන්න.</p>
+  <button onclick="installApp()">Install</button>
+  <button class="dismiss" onclick="document.getElementById('install-banner').style.display='none'">×</button>
+</div>
+
+<!-- App -->
+<div id="app">
+
+  <!-- ════ DASHBOARD ════ -->
+  <div class="screen active" id="s-home">
+    <div class="appbar">
+      <h1 id="greeting">Good morning, Kasun ☀️</h1>
+      <p id="rem-text">752 kcal remaining today</p>
+    </div>
+    <div class="scroll">
+      <!-- Calorie ring -->
+      <div class="card ring-card">
+        <div class="ring-svg-wrap">
+          <svg width="110" height="110" viewBox="0 0 110 110">
+            <circle cx="55" cy="55" r="46" fill="none" stroke="#eaf3de" stroke-width="9"/>
+            <circle id="ring" cx="55" cy="55" r="46" fill="none" stroke="#639922"
+              stroke-width="9" stroke-dasharray="289" stroke-dashoffset="104" stroke-linecap="round"
+              style="transition:stroke-dashoffset .6s ease, stroke .4s"/>
+          </svg>
+          <div class="ring-center">
+            <div class="rc-num" id="rc-num">1,248</div>
+            <div class="rc-lbl">KCAL</div>
+          </div>
+        </div>
+        <div style="flex:1">
+          <div class="goal-lbl">Daily Goal</div>
+          <div class="goal-num" id="goal-num">2,000 kcal</div>
+          <div class="macros">
+            <div class="mac ca"><div class="mv" id="mc">142g</div><div class="ml">Carbs</div></div>
+            <div class="mac pr"><div class="mv" id="mp">68g</div><div class="ml">Protein</div></div>
+            <div class="mac ft"><div class="mv" id="mf">42g</div><div class="ml">Fat</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Meals -->
+      <div class="sec">Today's Meals</div>
+      <div class="card" id="card-breakfast">
+        <div class="meal-head"><span class="mn">🌅 Breakfast</span><span class="mk" id="bk">480 kcal</span></div>
+        <div id="bl">
+          <div class="food-row"><div><div class="fn">Pol Roti <span class="lk">🇱🇰</span></div><div class="fd">2 pieces · 180g</div></div><div class="fk">480 kcal</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="meal-head"><span class="mn">🌞 Lunch</span><span class="mk" id="lk2">648 kcal</span></div>
+        <div id="ll">
+          <div class="food-row"><div><div class="fn">Rice <span class="lk">🇱🇰</span></div><div class="fd">1 cup · 150g</div></div><div class="fk">195 kcal</div></div>
+          <div class="food-row"><div><div class="fn">Dhal Curry <span class="lk">🇱🇰</span></div><div class="fd">1 bowl · 200g</div></div><div class="fk">220 kcal</div></div>
+          <div class="food-row"><div><div class="fn">Fish Curry <span class="lk">🇱🇰</span></div><div class="fd">1 piece · 120g</div></div><div class="fk">233 kcal</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="meal-head"><span class="mn">🌙 Dinner</span><span class="mk" id="dk" style="color:var(--muted)">—</span></div>
+        <div id="dl"><div style="font-size:12px;color:var(--muted);padding:2px 0">Nothing logged yet</div></div>
+      </div>
+      <div class="card">
+        <div class="meal-head"><span class="mn">🍎 Snacks</span><span class="mk" id="sk2" style="color:var(--muted)">—</span></div>
+        <div id="sl"><div style="font-size:12px;color:var(--muted);padding:2px 0">Nothing logged yet</div></div>
+      </div>
+
+      <!-- Water -->
+      <div class="card">
+        <div class="wh"><span class="wt">💧 Water Intake</span><span class="wa" id="wamt">1,250 ml</span></div>
+        <div class="cups" id="cups"></div>
+        <div class="wsub" id="wsub">5 of 8 cups · Keep going!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ LOG FOOD ════ -->
+  <div class="screen" id="s-log">
+    <div class="appbar"><h1>Log Food</h1><p>AI-powered food logging</p></div>
+    <div class="scroll">
+      <button class="ai-btn" onclick="openSheet(getRandFood(),'Dinner')">
+        <div class="ai-icon">📷</div>
+        <div><div class="ai-t1">AI Food Recognition</div><div class="ai-t2">Take a photo — AI identifies it instantly</div></div>
+      </button>
+      <div class="opt-grid">
+        <div class="opt" onclick="openSheet(getRandFood(),'Dinner')"><div class="oi">▦</div><div class="ot1">Barcode Scan</div><div class="ot2">Packaged foods</div></div>
+        <div class="opt" onclick="openSheet(getRandFood(),'Snack')"><div class="oi">🎙️</div><div class="ot1">Voice Log</div><div class="ot2">"I had rice..."</div></div>
+      </div>
+
+      <!-- Meal selector -->
+      <div class="meal-tabs" id="meal-tabs">
+        <div class="mt on" onclick="setMeal('Breakfast',this)">🌅 Breakfast</div>
+        <div class="mt" onclick="setMeal('Lunch',this)">🌞 Lunch</div>
+        <div class="mt" onclick="setMeal('Dinner',this)">🌙 Dinner</div>
+        <div class="mt" onclick="setMeal('Snack',this)">🍎 Snack</div>
+      </div>
+
+      <div class="search-box">
+        <span style="font-size:16px;color:var(--muted)">🔍</span>
+        <input type="text" placeholder="Search 500+ Sri Lankan & global foods..." id="fsearch" oninput="filterF(this.value)" autocomplete="off">
+      </div>
+      <div class="sec" style="display:flex;align-items:center;gap:8px">
+        Sri Lankan & Popular Foods
+        <span style="font-size:9px;background:#fff3e0;color:#c07a10;border:.5px solid #f5c060;border-radius:4px;padding:2px 7px;font-weight:700">🇱🇰 LK DB</span>
+      </div>
+      <div id="flist"></div>
+    </div>
+  </div>
+
+  <!-- ════ AI CHAT ════ -->
+  <div class="screen" id="s-chat">
+    <div class="appbar"><h1>AI Nutritionist</h1><p>Powered by Claude AI</p></div>
+    <div class="chat-wrap">
+      <div class="chat-msgs" id="chat-msgs"></div>
+      <div class="chips-row" id="chips-row">
+        <div class="chip" onclick="chipSend(this)">What should I eat for dinner?</div>
+        <div class="chip" onclick="chipSend(this)">Am I getting enough protein?</div>
+        <div class="chip" onclick="chipSend(this)">Suggest Sri Lankan meal plan</div>
+        <div class="chip" onclick="chipSend(this)">Calories in Kottu Roti?</div>
+        <div class="chip" onclick="chipSend(this)">How to lose weight safely?</div>
+      </div>
+      <div class="chat-bar">
+        <textarea class="chat-input" id="cinput" rows="1" placeholder="Ask your nutritionist..."
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();doSend()}"></textarea>
+        <button class="send-btn" id="sbtn" onclick="doSend()">
+          <svg class="send-icon" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ PROFILE ════ -->
+  <div class="screen" id="s-profile">
+    <div class="appbar"><h1>Profile</h1><p>Your health journey</p></div>
+    <div class="scroll">
+      <div class="card profile-hero">
+        <div class="avatar">🧑</div>
+        <div>
+          <div class="uname">Kasun Perera</div>
+          <div class="ugoal">Goal: Lose 5kg · 2,000 kcal/day</div>
+        </div>
+        <div class="streak-b"><div class="sn">🔥 14</div><div class="sl">day streak</div></div>
+      </div>
+      <div class="stat-row">
+        <div class="sc"><div class="sv">74.2</div><div class="sk">kg weight</div></div>
+        <div class="sc"><div class="sv">-1.8</div><div class="sk">kg lost</div></div>
+        <div class="sc"><div class="sv">23.9</div><div class="sk">BMI</div></div>
+      </div>
+      <div class="sec">Settings</div>
+      <div class="srow"><span class="si2">🎯</span><span class="st2">Health Goals</span><span class="sa2">›</span></div>
+      <div class="srow"><span class="si2">🍽️</span><span class="st2">Dietary Preferences</span><span class="sa2">›</span></div>
+      <div class="srow"><span class="si2">🇱🇰</span><span class="st2">Sri Lankan Foods Database</span><span class="sa2">500+ foods ›</span></div>
+      <div class="srow"><span class="si2">🔔</span><span class="st2">Meal Reminders</span><span class="sa2">›</span></div>
+      <div class="srow"><span class="si2">🏋️</span><span class="st2">Workout Tracker</span><span class="sa2">Coming soon ›</span></div>
+      <div class="srow"><span class="si2">🤖</span><span class="st2">AI Settings</span><span class="sa2">›</span></div>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:20px;padding-bottom:10px">
+        NutriAI v1.0.0 · Made with ❤️ for Sri Lanka 🇱🇰
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <div class="ni on" id="n0" onclick="go('home',0)"><div class="icon">🏠</div><div class="lbl">Home</div><div class="dot"></div></div>
+  <div class="ni" id="n1" onclick="go('log',1)"><div class="icon">➕</div><div class="lbl">Log</div><div class="dot"></div></div>
+  <div class="ni" id="n2" onclick="go('chat',2)"><div class="icon">🤖</div><div class="lbl">AI Chat</div><div class="dot"></div></div>
+  <div class="ni" id="n3" onclick="go('profile',3)"><div class="icon">👤</div><div class="lbl">Profile</div><div class="dot"></div></div>
+</nav>
+
+<!-- Add food sheet -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeSheet()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="handle"></div>
+    <div class="sh-name" id="sh-name">Pol Roti</div>
+    <div class="sh-sub" id="sh-sub">පොල් රොටි · 1 piece · 90g</div>
+    <div class="nutr-grid">
+      <div class="nb"><div class="nv" id="nv-cal" style="color:var(--green2)">240</div><div class="nl">kcal</div></div>
+      <div class="nb"><div class="nv" id="nv-carb" style="color:var(--amber)">32g</div><div class="nl">Carbs</div></div>
+      <div class="nb"><div class="nv" id="nv-prot" style="color:var(--blue)">5g</div><div class="nl">Protein</div></div>
+      <div class="nb"><div class="nv" id="nv-fat" style="color:var(--coral)">11g</div><div class="nl">Fat</div></div>
+    </div>
+    <div class="qty-row">
+      <label>Servings</label>
+      <input type="range" min="0.5" max="5" step="0.5" value="1" id="qty" oninput="updQty(this.value)">
+      <div class="qty-v" id="qv">1×</div>
+    </div>
+    <div class="btn-row">
+      <button class="bcn" onclick="closeSheet()">Cancel</button>
+      <button class="badd" id="badd" onclick="doAdd()">Add  +240 kcal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">✓ Added!</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────
+const FOODS = [
+  {n:'Rice (Steamed)',si:'හාල් බත්',cal:195,c:42,p:4,f:0.4,d:'1 cup · 150g',lk:1},
+  {n:'Pol Roti',si:'පොල් රොටි',cal:240,c:32,p:4.5,f:11,d:'1 piece · 90g',lk:1},
+  {n:'Hoppers (Appa)',si:'ආප්ප',cal:90,c:18,p:2.5,f:1.2,d:'1 piece · 80g',lk:1},
+  {n:'String Hoppers',si:'ඉදිආප්ප',cal:62,c:13,p:1.5,f:0.3,d:'5 pieces · 150g',lk:1},
+  {n:'Kottu Roti',si:'කොත්තු රොටි',cal:422,c:45,p:14,f:12,d:'1 plate · 300g',lk:1},
+  {n:'Dhal Curry',si:'පරිප්පු කරිය',cal:110,c:18,p:6,f:2.5,d:'1 bowl · 200g',lk:1},
+  {n:'Fish Curry',si:'මාළු කරිය',cal:150,c:3,p:22,f:6,d:'1 piece · 120g',lk:1},
+  {n:'Milk Rice (Kiribath)',si:'කිරිබත්',cal:200,c:30,p:3.5,f:8,d:'100g serving',lk:1},
+  {n:'Pittu',si:'පිට්ටු',cal:180,c:38,p:4,f:1,d:'1 piece · 100g',lk:1},
+  {n:'Coconut Sambol',si:'පොල් සම්බෝල',cal:205,c:5,p:2,f:20,d:'2 tbsp · 50g',lk:1},
+  {n:'Seeni Sambol',si:'සීනි සම්බෝල',cal:180,c:22,p:3,f:9,d:'2 tbsp · 80g',lk:1},
+  {n:'Brinjal Moju',si:'වම්බටු මෝජු',cal:95,c:12,p:2,f:4,d:'100g serving',lk:1},
+  {n:'Parippu (Lentils)',si:'පරිප්පු',cal:350,c:60,p:25,f:1.5,d:'100g dry',lk:1},
+  {n:'Chicken Curry',si:'කුකුල් මස් කරිය',cal:210,c:4,p:26,f:10,d:'1 piece · 130g',lk:1},
+  {n:'Banana',si:'කෙසෙල්',cal:89,c:23,p:1.1,f:0.3,d:'1 medium · 120g',lk:0},
+  {n:'Egg (Boiled)',si:'',cal:78,c:0.6,p:6,f:5,d:'1 large · 50g',lk:0},
+  {n:'Chicken Breast',si:'',cal:165,c:0,p:31,f:3.6,d:'100g cooked',lk:0},
+  {n:'Bread (White)',si:'',cal:130,c:25,p:4,f:1.5,d:'2 slices · 60g',lk:0},
+  {n:'Milk (Full Fat)',si:'',cal:61,c:4.7,p:3.2,f:3.3,d:'100ml',lk:0},
+  {n:'Oats (Cooked)',si:'',cal:71,c:12,p:2.5,f:1.4,d:'100g cooked',lk:0},
+];
+
+// ── State ──────────────────────────────────────────────────────
+let cals=1248, carbs=142, prot=68, fats=42;
+const GOAL=2000;
+let water=5;
+let curFood=null, curQty=1, curMeal='Breakfast';
+const chatH=[];
+let deferredPrompt=null;
+
+// ── Init ───────────────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  setGreeting();
+  setInterval(()=>{const n=new Date();document.getElementById('clock').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')},1000);
+  const n=new Date();document.getElementById('clock').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
+  initWater();
+  renderFoods(FOODS);
+  updateRing();
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+});
+
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;
+  document.getElementById('install-banner').style.display='flex';
+});
+
+function installApp(){
+  if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.then(()=>deferredPrompt=null);}
+  document.getElementById('install-banner').style.display='none';
+}
+
+function setGreeting(){
+  const h=new Date().getHours();
+  const g=h<12?'Good morning ☀️':h<17?'Good afternoon 🌤️':'Good evening 🌙';
+  document.getElementById('greeting').textContent=g+', Kasun';
+}
+
+// ── Navigation ─────────────────────────────────────────────────
+function go(name,idx){
+  ['home','log','chat','profile'].forEach((s,i)=>{
+    document.getElementById('s-'+s).classList.remove('active');
+    document.getElementById('n'+i).classList.remove('on');
+  });
+  document.getElementById('s-'+name).classList.add('active');
+  document.getElementById('n'+idx).classList.add('on');
+  if(name==='chat'&&chatH.length===0) initChat();
+}
+
+// ── Meal selector ──────────────────────────────────────────────
+function setMeal(meal,el){
+  curMeal=meal;
+  document.querySelectorAll('.mt').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+}
+
+// ── Water ──────────────────────────────────────────────────────
+function initWater(){
+  const wrap=document.getElementById('cups');
+  wrap.innerHTML='';
+  for(let i=0;i<8;i++){
+    const c=document.createElement('div');
+    c.className='cup'+(i<water?' full':'');
+    c.textContent=i<water?'💧':'';
+    c.onclick=()=>{water=i<water?i:i+1;initWater();};
+    wrap.appendChild(c);
+  }
+  document.getElementById('wamt').textContent=(water*250).toLocaleString()+' ml';
+  document.getElementById('wsub').textContent=water>=8?'Goal reached! 🎉 Well done!':water+' of 8 cups · '+(8-water)+' more to go!';
+}
+
+// ── Food list ──────────────────────────────────────────────────
+function renderFoods(list){
+  document.getElementById('flist').innerHTML=list.map(f=>`
+    <div class="fi" onclick='openSheet(${JSON.stringify(f)},curMeal)'>
+      <div class="fi-info">
+        <div class="fin">${f.n}${f.lk?'<span class="lk">🇱🇰</span>':''}</div>
+        ${f.si?`<div class="fisi">${f.si}</div>`:''}
+        <div class="fid">${f.d}</div>
+      </div>
+      <div class="fi-right">
+        <div class="fi-cal"><div class="cv">${f.cal}</div><div class="cl">kcal</div></div>
+        <div class="add-c">+</div>
+      </div>
+    </div>`).join('');
+}
+
+function filterF(q){
+  renderFoods(q.length<2?FOODS:FOODS.filter(f=>f.n.toLowerCase().includes(q.toLowerCase())||f.si.includes(q)));
+}
+function getRandFood(){return FOODS[Math.floor(Math.random()*FOODS.length)];}
+
+// ── Add food sheet ─────────────────────────────────────────────
+function openSheet(f,meal){
+  curFood=f; curQty=1; if(meal) curMeal=meal;
+  document.getElementById('sh-name').textContent=f.n;
+  document.getElementById('sh-sub').textContent=(f.si?f.si+' · ':'')+f.d;
+  document.getElementById('qty').value=1;
+  updQty(1);
+  document.getElementById('overlay').classList.add('on');
+}
+
+function updQty(v){
+  curQty=parseFloat(v);
+  document.getElementById('qv').textContent=v+'×';
+  document.getElementById('nv-cal').textContent=Math.round(curFood.cal*v);
+  document.getElementById('nv-carb').textContent=Math.round(curFood.c*v)+'g';
+  document.getElementById('nv-prot').textContent=Math.round(curFood.p*v)+'g';
+  document.getElementById('nv-fat').textContent=Math.round(curFood.f*v)+'g';
+  document.getElementById('badd').textContent=`Add  +${Math.round(curFood.cal*v)} kcal`;
+}
+
+function closeSheet(){document.getElementById('overlay').classList.remove('on');}
+
+function doAdd(){
+  const a=Math.round(curFood.cal*curQty);
+  cals+=a; carbs+=Math.round(curFood.c*curQty);
+  prot+=Math.round(curFood.p*curQty); fats+=Math.round(curFood.f*curQty);
+  updateRing();
+  // Add to correct meal list
+  const mealMap={Breakfast:'bl',Lunch:'ll',Dinner:'dl',Snack:'sl'};
+  const kMap={Breakfast:'bk',Lunch:'lk2',Dinner:'dk',Snack:'sk2'};
+  const listEl=document.getElementById(mealMap[curMeal]);
+  const kEl=document.getElementById(kMap[curMeal]);
+  if(listEl){
+    // Remove empty msg
+    if(listEl.querySelector('[style]')) listEl.innerHTML='';
+    const row=document.createElement('div'); row.className='food-row';
+    row.innerHTML=`<div><div class="fn">${curFood.n}${curFood.lk?'<span class="lk">🇱🇰</span>':''}</div><div class="fd">${curFood.d}</div></div><div class="fk">${a} kcal</div>`;
+    listEl.appendChild(row);
+    // Update meal kcal
+    const prev=parseInt(kEl.textContent)||0;
+    kEl.textContent=(prev+a)+' kcal';
+    kEl.style.color='';
+  }
+  closeSheet();
+  toast(`✓ ${curFood.n} added  +${a} kcal`);
+}
+
+function updateRing(){
+  const prog=Math.min(cals/GOAL,1);
+  const circ=289;
+  document.getElementById('ring').setAttribute('stroke-dashoffset',circ*(1-prog));
+  document.getElementById('ring').style.stroke=cals>GOAL?'#c94e22':'#639922';
+  document.getElementById('rc-num').textContent=cals.toLocaleString();
+  const rem=Math.max(GOAL-cals,0);
+  document.getElementById('rem-text').textContent=rem>0?rem.toLocaleString()+' kcal remaining today':'Daily goal reached! 🎉';
+  document.getElementById('mc').textContent=carbs+'g';
+  document.getElementById('mp').textContent=prot+'g';
+  document.getElementById('mf').textContent=fats+'g';
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast';
+  void t.offsetWidth; t.className='toast show';
+  setTimeout(()=>t.className='toast',2100);
+}
+
+// ── AI Chat ────────────────────────────────────────────────────
+function initChat(){
+  document.getElementById('chat-msgs').innerHTML='';
+  addMsg('ai',`ආයුබෝවන්! I\'m your NutriAI nutritionist 🥗\n\nToday you\'ve had **${cals.toLocaleString()} kcal** (${Math.round(cals/GOAL*100)}% of goal). You have **${Math.max(GOAL-cals,0).toLocaleString()} kcal** left.\n\nI know Sri Lankan food well — ask me anything! 🇱🇰`);
+}
+
+function addMsg(role,text){
+  const area=document.getElementById('chat-msgs');
+  const d=document.createElement('div');
+  d.className='msg '+role;
+  d.innerHTML=text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  area.appendChild(d);
+  area.scrollTop=area.scrollHeight;
+  return d;
+}
+
+async function doSend(){
+  const inp=document.getElementById('cinput');
+  const txt=inp.value.trim();
+  if(!txt) return;
+  inp.value=''; inp.style.height='auto';
+  document.getElementById('sbtn').disabled=true;
+  document.getElementById('chips-row').style.display='none';
+  addMsg('user',txt);
+  chatH.push({role:'user',content:txt});
+  const ld=addMsg('ai','● ● ●'); ld.classList.add('loading');
+  try{
+    const sys=`You are NutriAI, a friendly nutrition assistant specialised in Sri Lankan cuisine and diet.
+Current stats — Calories: ${cals}/${GOAL} kcal consumed, Carbs: ${carbs}g, Protein: ${prot}g, Fat: ${fats}g, Water: ${water} cups (${water*250}ml).
+Be warm, concise, practical. Reference Sri Lankan foods (Rice, Kottu, Appa, Pol Roti, etc.) naturally. Reply in English but use Sinhala food names in parentheses when helpful. Keep replies under 120 words.`;
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:300,system:sys,messages:chatH})
+    });
+    const d=await r.json();
+    const reply=d.content?.[0]?.text||'Sorry, try again.';
+    ld.remove(); addMsg('ai',reply);
+    chatH.push({role:'assistant',content:reply});
+  }catch(e){
+    ld.textContent='Could not connect. Check your internet.'; ld.classList.remove('loading');
+  }
+  document.getElementById('sbtn').disabled=false;
+}
+
+function chipSend(el){
+  document.getElementById('cinput').value=el.textContent;
+  doSend();
+}
+
+// Auto-resize textarea
+document.addEventListener('DOMContentLoaded',()=>{
+  const ta=document.getElementById('cinput');
+  if(ta) ta.addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,90)+'px';});
+});
+</script>
+
+<!-- PWA Manifest inline -->
+<script>
+const manifest={
+  name:'NutriAI - Calorie Tracker',
+  short_name:'NutriAI',
+  description:'AI-powered calorie tracker for Sri Lanka',
+  start_url:'/index.html',
+  display:'standalone',
+  background_color:'#f5f4f0',
+  theme_color:'#639922',
+  orientation:'portrait',
+  icons:[
+    {src:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="120" fill="%23639922"/><text y="340" x="256" text-anchor="middle" font-size="280">🥗</text></svg>',sizes:'512x512',type:'image/svg+xml',purpose:'any maskable'}
+  ]
+};
+const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+document.querySelector('link[rel=manifest]').href=url;
+</script>
+</body>
+</html>

@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#4a8f10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NutriAI">
+<title>NutriAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --g:#4a8f10;--g2:#639922;--gl:#eaf3de;--gd:#2d6008;
+  --am:#c07a10;--aml:#fef3dc;
+  --bl:#2979c8;--bll:#e8f2fd;
+  --co:#c94e22;--col:#fdeee8;
+  --bg:#f5f4f0;--card:#fff;--bdr:#e5e2d8;
+  --tx:#18180f;--sub:#5a5850;--mt:#9a9890;
+  --st:env(safe-area-inset-top,0px);
+  --sb:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'Sora',sans-serif}
+body{display:flex;flex-direction:column;max-width:480px;margin:0 auto}
+
+/* Pages */
+.page{position:fixed;inset:0;max-width:480px;margin:0 auto;display:none;flex-direction:column;background:var(--bg);z-index:1}
+.page.show{display:flex}
+
+/* Status bar */
+.sbar{height:calc(44px + var(--st));padding-top:var(--st);background:var(--card);display:flex;align-items:center;justify-content:space-between;padding:var(--st) 20px 0;font-size:12px;font-weight:700;color:var(--tx);flex-shrink:0;border-bottom:.5px solid var(--bdr);min-height:calc(44px + var(--st))}
+
+/* ── LOGIN ── */
+#pg-login{background:var(--card);overflow-y:auto;padding:0 24px calc(40px + var(--sb))}
+.logo{text-align:center;padding-top:calc(32px + var(--st));margin-bottom:28px}
+.logo .ic{font-size:64px;display:block;margin-bottom:10px}
+.logo h1{font-size:28px;font-weight:700;color:var(--tx)}
+.logo p{font-size:13px;color:var(--mt);margin-top:4px}
+.lk-b{display:inline-block;background:#fff3e0;border:.5px solid #f5c060;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#c07a10;margin-top:8px}
+.tabs{display:flex;background:var(--bg);border-radius:12px;padding:3px;margin-bottom:18px;border:.5px solid var(--bdr)}
+.tabs btn{flex:1;padding:9px;border:none;background:transparent;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--mt);border-radius:10px;cursor:pointer;transition:all .15s;display:block;text-align:center}
+.tabs btn.on{background:var(--card);color:var(--tx);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.fg{margin-bottom:13px}
+.fg label{font-size:12px;font-weight:600;color:var(--sub);display:block;margin-bottom:5px}
+.fg input,.fg select{width:100%;padding:13px 14px;background:var(--bg);border:.5px solid var(--bdr);border-radius:12px;font-family:'Sora',sans-serif;font-size:14px;color:var(--tx);outline:none;transition:border-color .15s}
+.fg input:focus{border-color:var(--g2)}
+.btn-p{width:100%;padding:14px;background:var(--g2);border:none;border-radius:13px;font-family:'Sora',sans-serif;font-size:15px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-p:active{background:var(--gd)}
+.btn-p:disabled{background:var(--mt);cursor:not-allowed}
+.errmsg{background:#fdeee8;border:.5px solid #f5b8a0;border-radius:9px;padding:9px 12px;font-size:12px;color:#c94e22;margin-bottom:12px;display:none}
+.ok-msg{background:var(--gl);border:.5px solid var(--g2);border-radius:9px;padding:9px 12px;font-size:12px;color:var(--gd);margin-bottom:12px;display:none}
+
+/* ── APP ── */
+.appbar{background:var(--card);padding:14px 18px 12px;border-bottom:.5px solid var(--bdr);flex-shrink:0}
+.appbar h1{font-size:18px;font-weight:700;color:var(--tx)}
+.appbar p{font-size:12px;color:var(--mt);margin-top:2px}
+.screens{flex:1;position:relative;overflow:hidden}
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .18s}
+.scr.on{opacity:1;pointer-events:all}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 90px}
+.card{background:var(--card);border-radius:16px;border:.5px solid var(--bdr);padding:16px;margin-bottom:12px}
+.sec{font-size:10px;font-weight:700;color:var(--mt);letter-spacing:.9px;text-transform:uppercase;margin-bottom:8px}
+
+/* Ring */
+.ring-card{display:flex;align-items:center;gap:16px}
+.ring-wrap{position:relative;width:110px;height:110px;flex-shrink:0}
+.ring-wrap svg{transform:rotate(-90deg)}
+.rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.rc .rn{font-size:22px;font-weight:700;color:var(--tx);line-height:1}
+.rc .rl{font-size:10px;color:var(--mt);letter-spacing:.5px;margin-top:2px}
+.macros{display:flex;gap:6px}
+.mac{flex:1;border-radius:10px;padding:8px 4px;text-align:center}
+.mac .mv{font-size:14px;font-weight:700}
+.mac .ml{font-size:10px;margin-top:2px}
+.mac.ca{background:var(--aml);color:var(--am)}
+.mac.pr{background:var(--bll);color:var(--bl)}
+.mac.ft{background:var(--col);color:var(--co)}
+
+/* Meals */
+.mh{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:.5px solid var(--bdr);margin-bottom:8px}
+.mh .mn{font-size:14px;font-weight:700;color:var(--tx)}
+.mh .mk{font-size:13px;font-weight:700;color:var(--g2)}
+.fr{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:.5px solid var(--bdr)}
+.fr:last-child{border-bottom:none;padding-bottom:0}
+.fn{font-size:13px;font-weight:600;color:var(--tx)}
+.fd{font-size:11px;color:var(--mt);margin-top:2px}
+.fk{font-size:13px;font-weight:700;color:var(--sub);flex-shrink:0}
+.lkt{font-size:9px;background:#fff3e0;color:#c07a10;border:.5px solid #f5c060;border-radius:4px;padding:1px 5px;margin-left:4px;font-weight:700;vertical-align:middle}
+.em{font-size:12px;color:var(--mt);padding:2px 0}
+
+/* Water */
+.wh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.cups{display:flex;gap:6px;flex-wrap:wrap}
+.cup{width:34px;height:42px;border-radius:7px;border:1.5px solid #b8d4f2;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;user-select:none;background:transparent}
+.cup.full{background:#c8dff7;border-color:var(--bl)}
+.wsub{font-size:11px;color:var(--mt);margin-top:9px}
+
+/* Log */
+.ai-btn{background:var(--g2);border:none;border-radius:16px;padding:18px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;width:100%;margin-bottom:10px;text-align:left}
+.ai-btn:active{background:var(--gd)}
+.ai-ic{width:50px;height:50px;background:rgba(255,255,255,.2);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.ai-t1{font-size:15px;font-weight:700;color:#fff;font-family:'Sora',sans-serif}
+.ai-t2{font-size:11px;color:rgba(255,255,255,.75);margin-top:3px;font-family:'Sora',sans-serif}
+.og{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.ob{background:var(--card);border:.5px solid var(--bdr);border-radius:14px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer}
+.ob:active{background:var(--bg)}
+.ob .oi{font-size:24px}
+.ob .ot1{font-size:12px;font-weight:700;color:var(--tx)}
+.ob .ot2{font-size:10px;color:var(--mt);text-align:center}
+.mtabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
+.mtabs::-webkit-scrollbar{display:none}
+.mt{padding:6px 14px;border-radius:20px;border:.5px solid var(--bdr);background:transparent;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:var(--sub);cursor:pointer;white-space:nowrap;transition:all .15s}
+.mt.on{background:var(--g2);border-color:var(--g2);color:#fff}
+.sb2{display:flex;align-items:center;gap:8px;background:var(--card);border:.5px solid var(--bdr);border-radius:12px;padding:11px 14px;margin-bottom:10px}
+.sb2 input{flex:1;border:none;outline:none;font-family:'Sora',sans-serif;font-size:13px;color:var(--tx);background:transparent}
+.fi{background:var(--card);border:.5px solid var(--bdr);border-radius:12px;padding:11px 12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;cursor:pointer}
+.fi:active{background:var(--gl)}
+.fin{font-size:13px;font-weight:600;color:var(--tx)}
+.fisi{font-size:11px;color:var(--mt)}
+.fid{font-size:10px;color:var(--mt);margin-top:2px}
+.ac{width:28px;height:28px;background:var(--gl);border:.5px solid rgba(99,153,34,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--g2);flex-shrink:0}
+
+/* Chat */
+.cw{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.cm{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;padding:11px 14px;font-size:13px;line-height:1.55;word-break:break-word}
+.msg.ai{background:var(--card);border:.5px solid var(--bdr);color:var(--tx);align-self:flex-start;border-radius:6px 16px 16px 16px}
+.msg.user{background:var(--g2);color:#fff;align-self:flex-end;border-radius:16px 16px 6px 16px}
+.msg.loading{color:var(--mt)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:0 14px 8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{background:var(--card);border:.5px solid var(--bdr);border-radius:20px;padding:7px 13px;font-size:11px;font-weight:600;color:var(--sub);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.chip:active{background:var(--gl);border-color:var(--g2);color:var(--gd)}
+.cbar{background:var(--card);border-top:.5px solid var(--bdr);padding:8px 12px calc(8px + var(--sb));display:flex;gap:8px;align-items:flex-end}
+.ci{flex:1;background:var(--bg);border:.5px solid var(--bdr);border-radius:12px;padding:10px 12px;font-family:'Sora',sans-serif;font-size:13px;color:var(--tx);outline:none;resize:none;max-height:90px;line-height:1.4}
+.sbtn{width:38px;height:38px;background:var(--g2);border:none;border-radius:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.sbtn:active{background:var(--gd)}
+.sbtn:disabled{background:var(--bdr)}
+.sbtn svg{width:16px;height:16px;fill:#fff}
+
+/* Profile */
+.ph{display:flex;align-items:center;gap:14px}
+.av{width:56px;height:56px;border-radius:50%;background:var(--gl);border:2px solid rgba(74,143,16,.25);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--gd)}
+.strow{display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);border:.5px solid var(--bdr);border-radius:14px;overflow:hidden;margin-bottom:12px}
+.sc{padding:14px;text-align:center}
+.sc+.sc{border-left:.5px solid var(--bdr)}
+.sv{font-size:17px;font-weight:700;color:var(--tx)}
+.sk{font-size:10px;color:var(--mt);margin-top:2px}
+.sr{background:var(--card);border:.5px solid var(--bdr);border-radius:12px;padding:13px 14px;display:flex;align-items:center;gap:11px;margin-bottom:7px;cursor:pointer}
+.sr:active{background:var(--bg)}
+.sr .si{font-size:17px}
+.sr .st{flex:1;font-size:13px;color:var(--tx)}
+.sr .sa{font-size:11px;color:var(--mt)}
+
+/* Nav */
+.bnav{background:var(--card);border-top:.5px solid var(--bdr);display:flex;padding-bottom:var(--sb);flex-shrink:0;z-index:50}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:10px 0 8px}
+.ni:active{opacity:.7}
+.ni .icon{font-size:21px}
+.ni .lbl{font-size:9px;font-weight:600;color:var(--mt)}
+.ni.on .lbl{color:var(--g2);font-weight:700}
+.ni .dot{width:4px;height:4px;border-radius:50%;background:var(--g2);display:none;margin:1px auto 0}
+.ni.on .dot{display:block}
+
+/* Overlays */
+.ov{position:fixed;inset:0;max-width:480px;margin:0 auto;background:rgba(10,12,8,.78);display:none;flex-direction:column;justify-content:flex-end;z-index:60}
+.ov.on{display:flex}
+.sheet{background:var(--card);border-radius:22px 22px 0 0;padding:20px 20px calc(20px + var(--sb));animation:sup .25s cubic-bezier(.34,1.3,.64,1);max-height:90vh;overflow-y:auto}
+@keyframes sup{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.hdl{width:38px;height:4px;background:var(--bdr);border-radius:2px;margin:0 auto 18px}
+.sh-name{font-size:19px;font-weight:700;color:var(--tx);margin-bottom:2px}
+.sh-sub{font-size:12px;color:var(--mt);margin-bottom:14px}
+.ng{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:16px}
+.nb{background:var(--bg);border-radius:10px;padding:9px 4px;text-align:center}
+.nb .nv{font-size:15px;font-weight:700}
+.nb .nl{font-size:10px;color:var(--mt);margin-top:2px}
+.qr{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.qr label{font-size:12px;color:var(--sub);white-space:nowrap}
+.qr input[type=range]{flex:1;accent-color:var(--g2)}
+.qv{font-size:14px;font-weight:700;color:var(--g2);min-width:28px;text-align:right}
+.brow{display:flex;gap:8px}
+.bcn{flex:1;padding:13px;border:.5px solid var(--bdr);background:transparent;border-radius:12px;font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer}
+.badd{flex:2;padding:13px;background:var(--g2);border:none;border-radius:12px;font-family:'Sora',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer}
+.badd:active{background:var(--gd)}
+
+/* Toast */
+.toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:#1a2e0a;color:#fff;font-size:13px;font-weight:600;padding:11px 22px;border-radius:22px;white-space:nowrap;pointer-events:none;opacity:0;z-index:80;max-width:90vw;text-align:center}
+@keyframes tp{0%{opacity:0;transform:translateX(-50%) translateY(10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0}}
+.toast.show{animation:tp 2.2s ease forwards}
+
+/* Spinner */
+.spin{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- ════ LOGIN ════ -->
+<div id="pg-login" class="page show">
+  <div class="logo">
+    <span class="ic">🥗</span>
+    <h1>NutriAI</h1>
+    <p>Your AI nutrition companion</p>
+    <span class="lk-b">🇱🇰 Built for Sri Lanka</span>
+  </div>
+  <div id="errmsg" class="errmsg"></div>
+  <div id="okmsg" class="ok-msg"></div>
+  <div class="tabs">
+    <btn class="on" id="tin" onclick="stab('in')">Sign In</btn>
+    <btn id="tup" onclick="stab('up')">Sign Up</btn>
+  </div>
+  <!-- Sign in -->
+  <div id="fin">
+    <div class="fg"><label>Email or Username</label><input type="text" id="lu" placeholder="your@email.com" autocomplete="username"></div>
+    <div class="fg"><label>Password</label><input type="password" id="lp" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn-p" id="btnli" onclick="doLogin()">Sign In</button>
+  </div>
+  <!-- Sign up -->
+  <div id="fup" style="display:none">
+    <div class="fg"><label>Your Name</label><input type="text" id="rn" placeholder="Kasun Perera"></div>
+    <div class="fg"><label>Email</label><input type="email" id="re" placeholder="your@email.com" autocomplete="email"></div>
+    <div class="fg"><label>Password</label><input type="password" id="rp" placeholder="Minimum 6 characters" onkeydown="if(event.key==='Enter')doSignup()"></div>
+    <button class="btn-p" id="btnsu" onclick="doSignup()">Create Account</button>
+  </div>
+  <p style="text-align:center;font-size:11px;color:var(--mt);margin-top:14px;padding-bottom:8px">Data is saved locally on your device.</p>
+</div>
+
+<!-- ════ APP ════ -->
+<div id="pg-app" class="page">
+  <div class="sbar">
+    <span id="clk">9:41</span>
+    <span>NutriAI 🥗</span>
+    <span>📶 🔋</span>
+  </div>
+  <div class="screens">
+
+    <!-- HOME -->
+    <div class="scr on" id="s-home">
+      <div class="appbar"><h1 id="greet">Good morning!</h1><p id="remtx">0 kcal remaining</p></div>
+      <div class="scroll">
+        <div class="card ring-card">
+          <div class="ring-wrap">
+            <svg width="110" height="110" viewBox="0 0 110 110">
+              <circle cx="55" cy="55" r="46" fill="none" stroke="#eaf3de" stroke-width="9"/>
+              <circle id="ring" cx="55" cy="55" r="46" fill="none" stroke="#639922"
+                stroke-width="9" stroke-dasharray="289" stroke-dashoffset="289"
+                stroke-linecap="round" style="transition:stroke-dashoffset .6s ease,stroke .4s"/>
+            </svg>
+            <div class="rc"><div class="rn" id="rn">0</div><div class="rl">KCAL</div></div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:11px;color:var(--mt)">Daily Goal</div>
+            <div style="font-size:19px;font-weight:700;color:var(--tx);margin:3px 0 11px" id="gdsp">2,000 kcal</div>
+            <div class="macros">
+              <div class="mac ca"><div class="mv" id="mc">0g</div><div class="ml">Carbs</div></div>
+              <div class="mac pr"><div class="mv" id="mp">0g</div><div class="ml">Protein</div></div>
+              <div class="mac ft"><div class="mv" id="mf">0g</div><div class="ml">Fat</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="sec">Today's Meals</div>
+        <div class="card"><div class="mh"><span class="mn">🌅 Breakfast</span><span class="mk" id="k-b">—</span></div><div id="l-b"><div class="em">Nothing logged yet</div></div></div>
+        <div class="card"><div class="mh"><span class="mn">🌞 Lunch</span><span class="mk" id="k-l">—</span></div><div id="l-l"><div class="em">Nothing logged yet</div></div></div>
+        <div class="card"><div class="mh"><span class="mn">🌙 Dinner</span><span class="mk" id="k-d">—</span></div><div id="l-d"><div class="em">Nothing logged yet</div></div></div>
+        <div class="card"><div class="mh"><span class="mn">🍎 Snack</span><span class="mk" id="k-s">—</span></div><div id="l-s"><div class="em">Nothing logged yet</div></div></div>
+        <div class="card">
+          <div class="wh">
+            <span style="font-size:14px;font-weight:700;color:var(--tx)">💧 Water Intake</span>
+            <span style="font-size:16px;font-weight:700;color:var(--bl)" id="wamt">0 ml</span>
+          </div>
+          <div class="cups" id="cups"></div>
+          <div class="wsub" id="wsub">0 of 8 cups</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div class="scr" id="s-log">
+      <div class="appbar"><h1>Log Food</h1><p>AI-powered food logging</p></div>
+      <div class="scroll">
+        <button class="ai-btn" onclick="openSheet(rnd(),'Dinner')">
+          <div class="ai-ic">📷</div>
+          <div><div class="ai-t1">AI Food Recognition</div><div class="ai-t2">Take a photo — AI identifies it instantly</div></div>
+        </button>
+        <div class="og">
+          <div class="ob" onclick="openSheet(rnd(),'Dinner')"><div class="oi">▦</div><div class="ot1">Barcode Scan</div><div class="ot2">Packaged foods</div></div>
+          <div class="ob" onclick="openSheet(rnd(),'Snack')"><div class="oi">🎙️</div><div class="ot1">Voice Log</div><div class="ot2">"I had rice..."</div></div>
+        </div>
+        <div class="mtabs">
+          <div class="mt on" onclick="sMeal('Breakfast',this)">🌅 Breakfast</div>
+          <div class="mt" onclick="sMeal('Lunch',this)">🌞 Lunch</div>
+          <div class="mt" onclick="sMeal('Dinner',this)">🌙 Dinner</div>
+          <div class="mt" onclick="sMeal('Snack',this)">🍎 Snack</div>
+        </div>
+        <div class="sb2">
+          <span style="font-size:16px;color:var(--mt)">🔍</span>
+          <input type="text" placeholder="Search Sri Lankan & global foods..." id="fs" oninput="filterF(this.value)" autocomplete="off">
+        </div>
+        <div class="sec" style="display:flex;align-items:center;gap:8px">
+          Sri Lankan & Popular Foods
+          <span style="font-size:9px;background:#fff3e0;color:#c07a10;border:.5px solid #f5c060;border-radius:4px;padding:2px 7px;font-weight:700">🇱🇰 LK DB</span>
+        </div>
+        <div id="flist"></div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="scr" id="s-chat">
+      <div class="appbar"><h1>AI Nutritionist</h1><p>Powered by Claude AI</p></div>
+      <div class="cw">
+        <div class="cm" id="cmsg"></div>
+        <div class="chips" id="chips">
+          <div class="chip" onclick="chSend(this)">What should I eat for dinner?</div>
+          <div class="chip" onclick="chSend(this)">Am I getting enough protein?</div>
+          <div class="chip" onclick="chSend(this)">Suggest a Sri Lankan meal plan</div>
+          <div class="chip" onclick="chSend(this)">Calories in Kottu Roti?</div>
+          <div class="chip" onclick="chSend(this)">How to lose weight safely?</div>
+        </div>
+        <div class="cbar">
+          <textarea class="ci" id="ci" rows="1" placeholder="Ask your nutritionist..."
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();doSend()}"></textarea>
+          <button class="sbtn" id="sbtn" onclick="doSend()">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="scr" id="s-profile">
+      <div class="appbar"><h1>Profile</h1><p>Your health journey</p></div>
+      <div class="scroll">
+        <div class="card ph">
+          <div class="av" id="avinit">?</div>
+          <div>
+            <div style="font-size:17px;font-weight:700;color:var(--tx)" id="pname">Loading...</div>
+            <div style="font-size:12px;color:var(--sub);margin-top:3px" id="pgoal">—</div>
+          </div>
+          <div style="background:var(--aml);border:.5px solid #f0c060;border-radius:10px;padding:8px 12px;text-align:center;margin-left:auto">
+            <div style="font-size:17px;font-weight:700;color:var(--am)">🔥 <span id="pstr">0</span></div>
+            <div style="font-size:10px;color:var(--am)">day streak</div>
+          </div>
+        </div>
+        <div class="strow">
+          <div class="sc"><div class="sv" id="pwt">—</div><div class="sk">kg weight</div></div>
+          <div class="sc"><div class="sv" id="pcal">0</div><div class="sk">kcal today</div></div>
+          <div class="sc"><div class="sv" id="pwc">0</div><div class="sk">cups water</div></div>
+        </div>
+        <div class="sec">Account</div>
+        <div class="sr" onclick="showPrSh()"><span class="si">🎯</span><span class="st">Health Goals & Profile</span><span class="sa">›</span></div>
+        <div class="sr" onclick="showApiSh()"><span class="si">🤖</span><span class="st">Claude AI API Key</span><span class="sa" id="apist">Not set ›</span></div>
+        <div class="sr" onclick="clearToday()"><span class="si">🗑️</span><span class="st">Clear Today's Logs</span><span class="sa">›</span></div>
+        <div class="sec" style="margin-top:4px">App</div>
+        <div class="sr"><span class="si">🇱🇰</span><span class="st">Sri Lankan Foods Database</span><span class="sa">20+ foods ›</span></div>
+        <div class="sr" onclick="doSignout()"><span class="si">🚪</span><span class="st" style="color:var(--co)">Sign Out</span><span class="sa">›</span></div>
+        <p style="text-align:center;font-size:11px;color:var(--mt);margin-top:20px;padding-bottom:10px">NutriAI v1.0 · Made with ❤️ for Sri Lanka 🇱🇰</p>
+      </div>
+    </div>
+
+  </div>
+  <nav class="bnav">
+    <div class="ni on" id="n0" onclick="go('home',0)"><div class="icon">🏠</div><div class="lbl">Home</div><div class="dot"></div></div>
+    <div class="ni" id="n1" onclick="go('log',1)"><div class="icon">➕</div><div class="lbl">Log</div><div class="dot"></div></div>
+    <div class="ni" id="n2" onclick="go('chat',2)"><div class="icon">🤖</div><div class="lbl">AI Chat</div><div class="dot"></div></div>
+    <div class="ni" id="n3" onclick="go('profile',3)"><div class="icon">👤</div><div class="lbl">Profile</div><div class="dot"></div></div>
+  </nav>
+</div>
+
+<!-- Food sheet -->
+<div class="ov" id="ov-f" onclick="if(event.target===this)closeF()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="hdl"></div>
+    <div class="sh-name" id="shn">Food</div>
+    <div class="sh-sub" id="shs"></div>
+    <div class="ng">
+      <div class="nb"><div class="nv" id="nvc" style="color:var(--g2)">0</div><div class="nl">kcal</div></div>
+      <div class="nb"><div class="nv" id="nvca" style="color:var(--am)">0g</div><div class="nl">Carbs</div></div>
+      <div class="nb"><div class="nv" id="nvp" style="color:var(--bl)">0g</div><div class="nl">Protein</div></div>
+      <div class="nb"><div class="nv" id="nvf" style="color:var(--co)">0g</div><div class="nl">Fat</div></div>
+    </div>
+    <div class="qr">
+      <label>Servings</label>
+      <input type="range" min="0.5" max="5" step="0.5" value="1" id="qty" oninput="uQty(this.value)">
+      <div class="qv" id="qvd">1×</div>
+    </div>
+    <div class="brow">
+      <button class="bcn" onclick="closeF()">Cancel</button>
+      <button class="badd" id="badd" onclick="doAdd()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- API key sheet -->
+<div class="ov" id="ov-api" onclick="if(event.target===this)closeApi()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="hdl"></div>
+    <h3 style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:12px">🤖 Claude AI API Key</h3>
+    <p style="font-size:12px;color:var(--sub);margin-bottom:14px;line-height:1.7">
+      AI chat use කරන්නට Anthropic API key enter කරන්න.<br>
+      Free key ලබාගන්න: <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--bl);font-weight:600">console.anthropic.com</a><br>
+      <span style="color:var(--mt);font-size:11px">⚠️ Key ඔයාගේ phone ඇතුළේ locally save වෙනවා.</span>
+    </p>
+    <div class="fg"><label>Paste API Key here</label><input type="password" id="akin" placeholder="sk-ant-api03-..." autocomplete="off"></div>
+    <button class="btn-p" onclick="saveApi()">Save API Key</button>
+    <button class="bcn" style="width:100%;margin-top:8px" onclick="closeApi()">Cancel</button>
+  </div>
+</div>
+
+<!-- Profile settings sheet -->
+<div class="ov" id="ov-pr" onclick="if(event.target===this)closePr()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="hdl"></div>
+    <h3 style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:16px">🎯 Health Goals</h3>
+    <div class="fg"><label>Your Name</label><input type="text" id="psn"></div>
+    <div class="fg"><label>Weight (kg)</label><input type="number" id="psw" min="30" max="200"></div>
+    <div class="fg"><label>Height (cm)</label><input type="number" id="psh" min="100" max="250"></div>
+    <div class="fg"><label>Daily Calorie Goal</label><input type="number" id="psg" min="1000" max="5000"></div>
+    <div class="fg">
+      <label>Goal</label>
+      <select id="psgt" style="width:100%;padding:13px 14px;background:var(--bg);border:.5px solid var(--bdr);border-radius:12px;font-family:'Sora',sans-serif;font-size:14px;color:var(--tx);outline:none">
+        <option value="lose">Lose Weight</option>
+        <option value="maintain" selected>Maintain Weight</option>
+        <option value="gain">Gain Muscle</option>
+      </select>
+    </div>
+    <button class="btn-p" onclick="savePr()">Save</button>
+    <button class="bcn" style="width:100%;margin-top:8px" onclick="closePr()">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+//  NutriAI — No Firebase, localStorage only
+// ════════════════════════════════════════════════
+
+const FOODS=[
+  {n:'Rice (Steamed)',si:'හාල් බත්',cal:195,ca:42,p:4,f:0.4,d:'1 cup · 150g',lk:1},
+  {n:'Pol Roti',si:'පොල් රොටි',cal:240,ca:32,p:4.5,f:11,d:'1 piece · 90g',lk:1},
+  {n:'Hoppers (Appa)',si:'ආප්ප',cal:90,ca:18,p:2.5,f:1.2,d:'1 piece · 80g',lk:1},
+  {n:'String Hoppers',si:'ඉදිආප්ප',cal:62,ca:13,p:1.5,f:0.3,d:'5 pieces · 150g',lk:1},
+  {n:'Kottu Roti',si:'කොත්තු රොටි',cal:422,ca:45,p:14,f:12,d:'1 plate · 300g',lk:1},
+  {n:'Dhal Curry',si:'පරිප්පු කරිය',cal:110,ca:18,p:6,f:2.5,d:'1 bowl · 200g',lk:1},
+  {n:'Fish Curry',si:'මාළු කරිය',cal:150,ca:3,p:22,f:6,d:'1 piece · 120g',lk:1},
+  {n:'Milk Rice (Kiribath)',si:'කිරිබත්',cal:200,ca:30,p:3.5,f:8,d:'100g serving',lk:1},
+  {n:'Pittu',si:'පිට්ටු',cal:180,ca:38,p:4,f:1,d:'1 piece · 100g',lk:1},
+  {n:'Coconut Sambol',si:'පොල් සම්බෝල',cal:205,ca:5,p:2,f:20,d:'2 tbsp · 50g',lk:1},
+  {n:'Seeni Sambol',si:'සීනි සම්බෝල',cal:180,ca:22,p:3,f:9,d:'2 tbsp · 80g',lk:1},
+  {n:'Chicken Curry',si:'කුකුල් කරිය',cal:210,ca:4,p:26,f:10,d:'1 piece · 130g',lk:1},
+  {n:'Brinjal Moju',si:'වම්බටු මෝජු',cal:95,ca:12,p:2,f:4,d:'100g',lk:1},
+  {n:'Parippu',si:'පරිප්පු',cal:116,ca:20,p:9,f:0.4,d:'100g cooked',lk:1},
+  {n:'Banana',si:'කෙසෙල්',cal:89,ca:23,p:1.1,f:0.3,d:'1 medium · 120g',lk:0},
+  {n:'Egg (Boiled)',si:'',cal:78,ca:0.6,p:6,f:5,d:'1 large · 50g',lk:0},
+  {n:'Chicken Breast',si:'',cal:165,ca:0,p:31,f:3.6,d:'100g cooked',lk:0},
+  {n:'Bread (White)',si:'',cal:130,ca:25,p:4,f:1.5,d:'2 slices · 60g',lk:0},
+  {n:'Milk (Full Fat)',si:'',cal:61,ca:4.7,p:3.2,f:3.3,d:'100ml',lk:0},
+  {n:'Oats (Cooked)',si:'',cal:71,ca:12,p:2.5,f:1.4,d:'100g cooked',lk:0},
+];
+
+// ── LocalStorage helpers ──────────────────────────
+const td = () => new Date().toISOString().slice(0,10);
+const $ = id => document.getElementById(id);
+const LS = {
+  get: k => { try{ return JSON.parse(localStorage.getItem(k)); }catch{ return null; } },
+  set: (k,v) => localStorage.setItem(k, JSON.stringify(v)),
+  del: k => localStorage.removeItem(k)
+};
+
+// ── Auth (localStorage-based) ─────────────────────
+// Users stored as: users = { email: { name, passHash, profile } }
+function hash(str) {
+  // Simple hash — good enough for local storage
+  let h = 0;
+  for(let i=0;i<str.length;i++) h = Math.imul(31,h)+str.charCodeAt(i)|0;
+  return h.toString(36);
+}
+
+let CUR = null; // current user email
+
+function doLogin() {
+  const u = $('lu').value.trim().toLowerCase();
+  const p = $('lp').value;
+  if(!u||!p) return showErr('Email and password required.');
+  const users = LS.get('na_users') || {};
+  const user = users[u];
+  if(!user) return showErr('No account found. Please sign up first.');
+  if(user.passHash !== hash(p)) return showErr('Incorrect password.');
+  LS.set('na_session', u);
+  CUR = u;
+  startApp(user);
+}
+
+function doSignup() {
+  const name = $('rn').value.trim();
+  const email = $('re').value.trim().toLowerCase();
+  const pass = $('rp').value;
+  if(!name||!email||!pass) return showErr('All fields are required.');
+  if(pass.length < 6) return showErr('Password must be at least 6 characters.');
+  if(!email.includes('@')) return showErr('Enter a valid email address.');
+  const users = LS.get('na_users') || {};
+  if(users[email]) return showErr('Account already exists. Please sign in.');
+  users[email] = {
+    name, email, passHash: hash(pass),
+    profile: { name, weight:0, height:0, calorieGoal:2000, goalType:'maintain', streak:0 }
+  };
+  LS.set('na_users', users);
+  LS.set('na_session', email);
+  CUR = email;
+  startApp(users[email]);
+}
+
+function doSignout() {
+  if(!confirm('Sign out?')) return;
+  LS.del('na_session');
+  CUR = null; chatH = [];
+  $('pg-app').classList.remove('show');
+  $('pg-login').classList.add('show');
+  $('lu').value=''; $('lp').value='';
+}
+
+function stab(t) {
+  $('fin').style.display = t==='in'?'block':'none';
+  $('fup').style.display = t==='up'?'block':'none';
+  $('tin').classList.toggle('on', t==='in');
+  $('tup').classList.toggle('on', t==='up');
+  $('errmsg').style.display='none';
+}
+
+function showErr(m){ const e=$('errmsg'); e.textContent=m; e.style.display='block'; setTimeout(()=>e.style.display='none',4000); }
+
+// ── App start ─────────────────────────────────────
+function startApp(user) {
+  $('pg-login').classList.remove('show');
+  $('pg-app').classList.add('show');
+  loadProf();
+  renderDash();
+  renderW();
+  renderFoods(FOODS);
+  setGreet();
+  initClk();
+  chkApi();
+}
+
+// Auto login check
+window.addEventListener('load', () => {
+  const sess = LS.get('na_session');
+  if(sess) {
+    const users = LS.get('na_users')||{};
+    if(users[sess]) { CUR=sess; startApp(users[sess]); }
+  }
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+});
+
+// ── Profile ───────────────────────────────────────
+function getProf() {
+  const users = LS.get('na_users')||{};
+  return users[CUR]?.profile || {name:'User',weight:0,height:0,calorieGoal:2000,goalType:'maintain',streak:0};
+}
+function saveProf(data) {
+  const users = LS.get('na_users')||{};
+  if(users[CUR]) { users[CUR].profile={...getProf(),...data}; LS.set('na_users',users); }
+}
+
+function loadProf() {
+  const pr = getProf();
+  const n = pr.name||'User';
+  $('pname').textContent=n;
+  $('avinit').textContent=n.charAt(0).toUpperCase();
+  $('pgoal').textContent=`Goal: ${pr.goalType==='lose'?'Lose Weight':pr.goalType==='gain'?'Gain Muscle':'Maintain'} · ${pr.calorieGoal} kcal/day`;
+  $('gdsp').textContent=(pr.calorieGoal||2000).toLocaleString()+' kcal';
+  $('pwt').textContent=pr.weight||'—';
+  $('pstr').textContent=pr.streak||0;
+  $('psn').value=pr.name||'';
+  $('psw').value=pr.weight||'';
+  $('psh').value=pr.height||'';
+  $('psg').value=pr.calorieGoal||2000;
+  $('psgt').value=pr.goalType||'maintain';
+}
+
+function showPrSh(){ loadProf(); $('ov-pr').classList.add('on'); }
+function closePr(){ $('ov-pr').classList.remove('on'); }
+function savePr(){
+  saveProf({
+    name:$('psn').value.trim()||getProf().name,
+    weight:parseFloat($('psw').value)||0,
+    height:parseFloat($('psh').value)||0,
+    calorieGoal:parseInt($('psg').value)||2000,
+    goalType:$('psgt').value
+  });
+  loadProf(); closePr(); toast('✓ Profile saved!'); setGreet();
+}
+
+// ── Food Logs ─────────────────────────────────────
+function getLogs() {
+  return (LS.get('na_logs_'+CUR+'_'+td()) || []);
+}
+function saveLogs(logs) {
+  LS.set('na_logs_'+CUR+'_'+td(), logs);
+}
+function addLog(food, qty, meal) {
+  const logs = getLogs();
+  logs.push({
+    id: Date.now(), meal, name:food.n, si:food.si||'', lk:food.lk||0,
+    cal:Math.round(food.cal*qty), carbs:Math.round(food.ca*qty),
+    protein:Math.round(food.p*qty), fat:Math.round(food.f*qty),
+    detail:food.d, qty, ts:new Date().toISOString()
+  });
+  saveLogs(logs);
+}
+
+function renderDash(){
+  const logs = getLogs();
+  const meals=['Breakfast','Lunch','Dinner','Snack'];
+  const lm={Breakfast:'l-b',Lunch:'l-l',Dinner:'l-d',Snack:'l-s'};
+  const km={Breakfast:'k-b',Lunch:'k-l',Dinner:'k-d',Snack:'k-s'};
+  let tc=0,tca=0,tp=0,tf=0;
+  meals.forEach(m=>{
+    const ml=logs.filter(l=>l.meal===m);
+    const le=$(lm[m]),ke=$(km[m]);
+    if(!ml.length){le.innerHTML='<div class="em">Nothing logged yet</div>';ke.textContent='—';ke.style.color='';}
+    else{
+      le.innerHTML=ml.map(l=>`<div class="fr"><div><div class="fn">${l.name}${l.lk?'<span class="lkt">🇱🇰</span>':''}</div><div class="fd">${l.detail}</div></div><div class="fk">${l.cal} kcal</div></div>`).join('');
+      const mc=ml.reduce((s,l)=>s+l.cal,0);ke.textContent=mc+' kcal';ke.style.color='';
+    }
+    tc+=ml.reduce((s,l)=>s+l.cal,0);
+    tca+=ml.reduce((s,l)=>s+l.carbs,0);
+    tp+=ml.reduce((s,l)=>s+l.protein,0);
+    tf+=ml.reduce((s,l)=>s+l.fat,0);
+  });
+  const g=getProf().calorieGoal||2000;
+  const pr=Math.min(tc/g,1);
+  $('ring').setAttribute('stroke-dashoffset',289*(1-pr));
+  $('ring').style.stroke=tc>g?'#c94e22':'#639922';
+  $('rn').textContent=tc.toLocaleString();
+  $('mc').textContent=tca+'g'; $('mp').textContent=tp+'g'; $('mf').textContent=tf+'g';
+  $('remtx').textContent=Math.max(g-tc,0)>0?`${Math.max(g-tc,0).toLocaleString()} kcal remaining today`:'🎉 Daily goal reached!';
+  $('pcal').textContent=tc;
+}
+
+function clearToday(){
+  if(!confirm("Clear all of today's food logs?")) return;
+  LS.del('na_logs_'+CUR+'_'+td());
+  renderDash(); toast('✓ Today\'s logs cleared');
+}
+
+// ── Water ──────────────────────────────────────────
+function getW(){ return LS.get('na_water_'+CUR+'_'+td())||0; }
+function saveW(n){ LS.set('na_water_'+CUR+'_'+td(),n); }
+function renderW(){
+  const w=getW();
+  $('pwc').textContent=w;
+  const wrap=$('cups'); wrap.innerHTML='';
+  for(let i=0;i<8;i++){
+    const c=document.createElement('div');
+    c.className='cup'+(i<w?' full':'');
+    c.textContent=i<w?'💧':'';
+    c.onclick=()=>{ const nw=i<w?i:i+1; saveW(nw); renderW(); $('pwc').textContent=nw; };
+    wrap.appendChild(c);
+  }
+  $('wamt').textContent=(w*250).toLocaleString()+' ml';
+  $('wsub').textContent=w>=8?'Goal reached! 🎉 Amazing!':`${w} of 8 cups · ${(8-w)*250} ml more to go`;
+}
+
+// ── Food sheet ────────────────────────────────────
+let cFood=null, cQty=1, cMeal='Breakfast';
+
+function openSheet(f,m){ cFood=f; cQty=1; if(m)cMeal=m; $('shn').textContent=f.n; $('shs').textContent=(f.si?f.si+' · ':'')+f.d; $('qty').value=1; uQtyUI(1); $('ov-f').classList.add('on'); }
+function uQty(v){ cQty=parseFloat(v); uQtyUI(v); }
+function uQtyUI(v){ if(!cFood)return; $('qvd').textContent=v+'×'; $('nvc').textContent=Math.round(cFood.cal*v); $('nvca').textContent=Math.round(cFood.ca*v)+'g'; $('nvp').textContent=Math.round(cFood.p*v)+'g'; $('nvf').textContent=Math.round(cFood.f*v)+'g'; $('badd').textContent=`Add  +${Math.round(cFood.cal*v)} kcal`; }
+function closeF(){ $('ov-f').classList.remove('on'); }
+function doAdd(){ if(!cFood)return; addLog(cFood,cQty,cMeal); closeF(); renderDash(); toast(`✓ ${cFood.n} added  +${Math.round(cFood.cal*cQty)} kcal`); }
+function rnd(){ return FOODS[Math.floor(Math.random()*FOODS.length)]; }
+function sMeal(m,el){ cMeal=m; document.querySelectorAll('.mt').forEach(t=>t.classList.remove('on')); el.classList.add('on'); }
+function filterF(q){ renderFoods(q.length<2?FOODS:FOODS.filter(f=>f.n.toLowerCase().includes(q.toLowerCase())||f.si.includes(q))); }
+function renderFoods(list){
+  $('flist').innerHTML=list.map(f=>`<div class="fi" onclick='openSheet(${JSON.stringify(f)},cMeal)'>
+    <div><div class="fin">${f.n}${f.lk?'<span class="lkt">🇱🇰</span>':''}</div>${f.si?`<div class="fisi">${f.si}</div>`:''}<div class="fid">${f.d}</div></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div><div style="font-size:15px;font-weight:700;color:var(--g2)">${f.cal}</div><div style="font-size:9px;color:var(--mt)">kcal</div></div>
+      <div class="ac">+</div>
+    </div>
+  </div>`).join('');
+}
+
+// ── API Key ───────────────────────────────────────
+function chkApi(){ const k=localStorage.getItem('na_claude_key'); $('apist').textContent=k?'Set ✓ ›':'Not set ›'; if(k)$('akin').value=k; }
+function showApiSh(){ chkApi(); $('ov-api').classList.add('on'); }
+function closeApi(){ $('ov-api').classList.remove('on'); }
+function saveApi(){ const k=$('akin').value.trim(); if(!k)return toast('Please enter API key'); localStorage.setItem('na_claude_key',k); chkApi(); closeApi(); toast('✓ API key saved!'); }
+
+// ── AI Chat ───────────────────────────────────────
+let chatH=[];
+function initChat(){
+  $('cmsg').innerHTML=''; chatH=[];
+  const logs=getLogs(), pr=getProf();
+  const tc=logs.reduce((s,l)=>s+l.cal,0), g=pr.calorieGoal||2000;
+  const nm=(pr.name||'').split(' ')[0]||'there';
+  const k=localStorage.getItem('na_claude_key');
+  addMsg('ai',`ආයුබෝවන් ${nm}! I'm your NutriAI nutritionist 🥗\n\nToday you've had **${tc.toLocaleString()} kcal** (${Math.round(tc/g*100)}% of goal). **${Math.max(g-tc,0).toLocaleString()} kcal** remaining.\n\n`+(k?'Ask me anything about your nutrition! 🇱🇰':'⚠️ Add your Claude API key in Profile → AI Settings to enable AI responses.'));
+}
+
+function addMsg(role,text){
+  const a=$('cmsg'), d=document.createElement('div');
+  d.className='msg '+role;
+  d.innerHTML=text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  a.appendChild(d); a.scrollTop=a.scrollHeight; return d;
+}
+
+async function doSend(){
+  const k=localStorage.getItem('na_claude_key');
+  if(!k){ showApiSh(); return; }
+  const inp=$('ci'), txt=inp.value.trim();
+  if(!txt) return;
+  inp.value=''; inp.style.height='auto';
+  $('sbtn').disabled=true;
+  $('chips').style.display='none';
+  addMsg('user',txt);
+  chatH.push({role:'user',content:txt});
+  const ld=addMsg('ai','● ● ●'); ld.classList.add('loading');
+  const logs=getLogs(), pr=getProf();
+  const tc=logs.reduce((s,l)=>s+l.cal,0), g=pr.calorieGoal||2000;
+  const sys=`You are NutriAI, a friendly nutrition assistant for Sri Lankan users.
+User: ${pr.name}, Goal: ${pr.goalType}, Weight: ${pr.weight}kg.
+Today: ${tc}/${g} kcal (${Math.max(g-tc,0)} remaining). Water: ${getW()} cups.
+Meals logged: ${logs.map(l=>`${l.meal}: ${l.name}(${l.cal}kcal)`).join(', ')||'none yet'}.
+Be warm, concise, practical. Reference Sri Lankan foods naturally. Max 120 words.`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:300,system:sys,messages:chatH})
+    });
+    if(r.status===401){ ld.remove(); addMsg('ai','❌ Invalid API key. Check Profile → AI Settings.'); $('sbtn').disabled=false; return; }
+    const data=await r.json();
+    const rep=data.content?.[0]?.text||'Sorry, try again.';
+    ld.remove(); addMsg('ai',rep);
+    chatH.push({role:'assistant',content:rep});
+  }catch{
+    ld.textContent='❌ Connection failed. Check your internet.'; ld.classList.remove('loading');
+  }
+  $('sbtn').disabled=false;
+}
+
+function chSend(el){ $('ci').value=el.textContent; doSend(); }
+
+// ── Nav ───────────────────────────────────────────
+function go(name,idx){
+  ['home','log','chat','profile'].forEach((s,i)=>{ $('s-'+s).classList.remove('on'); $('n'+i).classList.remove('on'); });
+  $('s-'+name).classList.add('on'); $('n'+idx).classList.add('on');
+  if(name==='chat'&&!chatH.length) initChat();
+  if(name==='home'){ renderDash(); renderW(); }
+  if(name==='profile'){ loadProf(); $('pwc').textContent=getW(); $('pcal').textContent=getLogs().reduce((s,l)=>s+l.cal,0); }
+}
+
+// ── Helpers ───────────────────────────────────────
+function setGreet(){
+  const h=new Date().getHours();
+  const g=h<12?'Good morning ☀️':h<17?'Good afternoon 🌤️':'Good evening 🌙';
+  const n=getProf().name?.split(' ')[0]||'';
+  $('greet').textContent=g+(n?', '+n+'!':'!');
+}
+function initClk(){
+  const t=()=>{const n=new Date(); $('clk').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');};
+  t(); setInterval(t,1000);
+}
+function toast(m){ const t=$('toast'); t.textContent=m; t.className='toast'; void t.offsetWidth; t.className='toast show'; setTimeout(()=>t.className='toast',2400); }
+
+$('ci')?.addEventListener('input',function(){ this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,90)+'px'; });
+</script>
+</body>
+</html>
